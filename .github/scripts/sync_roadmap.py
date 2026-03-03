@@ -129,15 +129,31 @@ def ensure_label_exists(label: str, repo: str | None, color: str = "ededed") -> 
         pass  # label already exists
 
 
+def find_existing_issue(title: str, repo: str | None) -> int | None:
+    """Search for an open or closed issue with the exact same title. Returns its number or None."""
+    try:
+        raw = gh(["issue", "list", "--search", f"in:title {title}",
+                  "--state", "all", "--json", "number,title", "--limit", "10"], repo)
+        issues = json.loads(raw)
+        for issue in issues:
+            if issue["title"].strip() == title.strip():
+                return issue["number"]
+    except subprocess.CalledProcessError:
+        pass
+    return None
+
+
 def create_issue(title: str, label: str, repo: str | None) -> int:
     """Create a new GitHub issue and return its number."""
-    raw = gh(["issue", "create",
+    url = gh(["issue", "create",
               "--title", title,
               "--body", f"Auto-created from ROADMAP.md\n\nPhase: `{label}`",
-              "--label", label,
-              "--json", "number"], repo)
-    data = json.loads(raw)
-    return data["number"]
+              "--label", label], repo)
+    # gh issue create prints the URL: https://github.com/owner/repo/issues/42
+    match = re.search(r"/issues/(\d+)", url)
+    if not match:
+        raise RuntimeError(f"Could not parse issue number from gh output: {url}")
+    return int(match.group(1))
 
 
 def close_issue(number: int, repo: str | None) -> None:
@@ -272,7 +288,8 @@ def main() -> None:
         ensure_label_exists(IN_PROGRESS_LABEL, args.repo, "fbca04")
 
     # ── Phase 1: Auto-create issues for tasks without (#N) ────────────────
-    new_tasks = [t for t in tasks if t.issue_number is None]
+    # Skip done tasks — no point creating an issue just to close it
+    new_tasks = [t for t in tasks if t.issue_number is None and t.state != TaskState.DONE]
     if new_tasks:
         print(f"{prefix}Creating {len(new_tasks)} new issue(s)...")
         roadmap_modified = False
@@ -281,15 +298,21 @@ def main() -> None:
             if args.dry_run:
                 print(f"  would create: \"{task.title}\" [{task.phase_label}]")
             else:
-                ensure_label_exists(task.phase_label, args.repo)
-                issue_num = create_issue(task.title, task.phase_label, args.repo)
+                # Check for existing issue with same title to avoid duplicates
+                existing = find_existing_issue(task.title, args.repo)
+                if existing:
+                    print(f"  found existing #{existing}: \"{task.title}\" (skipping creation)")
+                    issue_num = existing
+                else:
+                    ensure_label_exists(task.phase_label, args.repo)
+                    issue_num = create_issue(task.title, task.phase_label, args.repo)
+                    print(f"  created #{issue_num}: \"{task.title}\"")
                 task.issue_number = issue_num
                 update_roadmap_line(
                     roadmap_path, task.line_number,
                     task.title, checkbox_char, issue_num
                 )
                 roadmap_modified = True
-                print(f"  created #{issue_num}: \"{task.title}\"")
 
         if roadmap_modified:
             print()
