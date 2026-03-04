@@ -1,111 +1,184 @@
-# Technical Architecture Report: xpg Package Manager for X Distribution
+# xpm -- Package Manager for X Distribution
 
-## 1. Introduction and Project Scope
+> Modern, high-performance package manager written in pure Rust for the X distribution (Arch Linux-based).
 
-The `xpg` project is a modern, high-performance package management solution engineered for 'X', an Arch Linux-based distribution. Architecturally, `xpg` represents a strategic pivot from the legacy C-based infrastructure—specifically `libalpm` and the `pacman` frontend—toward a safety-critical framework authored in Rust.
+## Overview
 
-This transition leverages Rust’s ownership model and zero-cost abstractions to eliminate entire classes of memory-safety vulnerabilities inherent in C. The project is a primary beneficiary of the 2024 modernization efforts funded by the Sovereign Tech Fund (STF), which prioritized the formalization of core ALPM specifications. These specifications, including `alpm-db`, `alpm-repo`, and `alpm-package`, are distributed via the `alpm-docs` package to ensure technical transparency.
+`xpm` is a native Rust replacement for `pacman` and `libalpm`, designed for the X distribution. It uses the ALPM package format (`.pkg.tar.zst`) and is compatible with Arch Linux repositories while providing a modern, memory-safe implementation.
 
-During this transition, `xpg` utilizes the `alpm.rs` crate, which provides ergonomic and safe FFI bindings to `libalpm` v15.x.x. This hybrid approach allows us to maintain compatibility with existing Arch Linux infrastructure while incrementally migrating core logic to a native Rust implementation.
+### Key features
 
-## 2. Rust Project Architecture
+- **Pure Rust** -- no C dependencies in the final build
+- **SAT-based dependency resolver** -- powered by `resolvo` with CDCL and watched-literal propagation
+- **ALPM compatible** -- reads `.pkg.tar.zst` packages, `alpm-repo-db` databases, and `.PKGINFO` / `.BUILDINFO` / `.MTREE` metadata
+- **Flexible repository management** -- predefined and temporary repos with `xpm repo add/remove/list`
+- **OpenPGP verification** -- detached signatures with Web of Trust model
+- **TOML configuration** -- clean, human-readable config at `/etc/xpm.conf`
 
-The `xpg` codebase is organized to maximize modularity and testability, adhering to industry best practices for robust Rust CLI development.
+## Installation
 
-- **main.rs**: The entry point of the binary. It orchestrates high-level logic, initializes global states, and handles top-level error reporting.
-- **lib.rs**: The library crate root. It houses the core business logic, abstracting the package management operations from the interface.
-- **cli.rs**: A dedicated abstraction layer for the Command Line Interface. It leverages the `clap` crate for declarative argument parsing, subcommand management, and automated documentation generation.
-- **config.rs**: Manages the application lifecycle regarding configuration, handling environment variables, and parsing filesystem-based configuration files.
-
-### Conceptual Directory Tree
-
-```text
-xpg/
-├── src/
-│   ├── main.rs      # Binary entry point
-│   ├── lib.rs       # Library root (core logic)
-│   ├── cli.rs       # CLI interface definition (clap)
-│   └── config.rs    # Configuration management
-├── tests/           # Integration and functional tests
-├── examples/        # Crate usage examples for developers
-└── Cargo.toml       # Manifest and dependency management
+```bash
+git clone https://github.com/xscriptordev/xpm.git
+cd xpm
+cargo build --release
+sudo cp target/release/xpm /usr/local/bin/
 ```
 
-## 3. Dependency Resolution Engine
+## Usage
 
-`xpg` incorporates a modern, logic-based dependency solver powered by the `resolvo` library (the Rust-native evolution of `libsolv_rs`). Unlike legacy heuristic-based solvers, `resolvo` treats dependency resolution as a mathematical optimization problem.
+```bash
+# Sync package databases
+xpm sync
 
-### Logic-Based Resolution Components
+# Install packages
+xpm install <package> [<package>...]
 
-1. **Boolean Satisfiability (SAT)**: All package relationships (dependencies, conflicts, and version constraints) are transformed into a set of boolean clauses. These clauses must be in **Conjunctive Normal Form (CNF)**, utilizing exclusively `¬` (NOT) and `∨` (OR) operators.
-2. **Unit Propagation**: An optimization mechanism that assigns values to variables when a clause is "forced" to a specific outcome to remain true. Our implementation follows the **watched literals** technique described in the **MiniSAT paper** to maintain high performance during propagation.
-3. **Conflict-Driven Clause Learning (CDCL)**: When the solver hits a conflict (a state where no assignment satisfies all clauses), it analyzes the conflict's root cause, "learns" a new clause to prevent re-entry into that state, and backtracks to a previous valid decision level.
+# Remove packages
+xpm remove <package>
 
-### Dependency Translation to CNF
+# System upgrade
+xpm upgrade
 
-The following table demonstrates how standard package requirements are represented as boolean clauses within the solver:
+# Search packages
+xpm search <query>
 
-|   |   |   |
+# Query installed packages
+xpm query
+
+# Package info
+xpm info <package>
+
+# List files owned by a package
+xpm files <package>
+
+# Manage repositories
+xpm repo list
+xpm repo add <name> <url>
+xpm repo remove <name>
+```
+
+### Pacman-style aliases
+
+| Alias | Command |
+|-------|---------|
+| `xpm Sy` | `xpm sync` |
+| `xpm S <pkg>` | `xpm install <pkg>` |
+| `xpm R <pkg>` | `xpm remove <pkg>` |
+| `xpm Su` | `xpm upgrade` |
+| `xpm Q` | `xpm query` |
+| `xpm Ss <query>` | `xpm search <query>` |
+| `xpm Si <pkg>` | `xpm info <pkg>` |
+| `xpm Ql <pkg>` | `xpm files <pkg>` |
+
+### Global flags
+
+| Flag | Description |
+|------|-------------|
+| `-c, --config <PATH>` | Custom configuration file |
+| `-v, --verbose` | Increase verbosity (-v, -vv, -vvv) |
+| `--no-confirm` | Skip confirmation prompts |
+| `--root <PATH>` | Alternative installation root |
+| `--dbpath <PATH>` | Alternative database directory |
+| `--cachedir <PATH>` | Alternative cache directory |
+| `--no-color` | Disable colored output |
+
+## Configuration
+
+Configuration file: `/etc/xpm.conf` (TOML format).
+
+See [etc/xpm.conf.example](etc/xpm.conf.example) for all available options.
+
+```toml
+[options]
+root_dir = "/"
+db_path = "/var/lib/xpm/"
+cache_dir = "/var/cache/xpm/pkg/"
+sig_level = "optional"
+parallel_downloads = 5
+
+[[repo]]
+name = "core"
+server = [
+    "https://xscriptor.github.io/x-repo/$repo/os/$arch",
+]
+
+[[repo]]
+name = "extra"
+server = [
+    "https://xscriptor.github.io/x-repo/$repo/os/$arch",
+]
+```
+
+### Repository management
+
+Predefined repositories are configured in `/etc/xpm.conf`. Temporary repositories can be added at runtime with `xpm repo add` and are stored in `/etc/xpm.d/`.
+
+## Project structure
+
+```text
+xpm/
+├── Cargo.toml                  # Workspace root
+├── crates/
+│   ├── xpm/                    # Binary crate (CLI frontend)
+│   │   └── src/
+│   │       ├── main.rs         # Entry point, logging, config, dispatch
+│   │       └── cli.rs          # clap CLI definition
+│   └── xpm-core/               # Library crate (core logic)
+│       └── src/
+│           ├── lib.rs           # Module root
+│           ├── config.rs        # TOML configuration parser
+│           └── error.rs         # Error types
+├── etc/
+│   └── xpm.conf.example        # Example configuration
+└── ROADMAP.md                   # Development roadmap
+```
+
+## Technical architecture
+
+### Dependency resolution
+
+`xpm` uses a logic-based SAT solver (`resolvo`) that transforms package relationships into CNF boolean clauses:
+
+| Requirement | CNF Clause | Meaning |
 |---|---|---|
-|Dependency Requirement|CNF Boolean Clause|Architectural Interpretation|
-|**Dependency**|`¬foo ∨ bar`|If `foo` is selected, `bar` must also be selected.|
-|**Root Requirement**|`foo`|The target package `foo` is a mandatory assignment.|
-|**Conflict**|`¬bar_v1 ∨ ¬bar_v2`|Mutually exclusive versions of the same package.|
-|**Unavailability**|`¬baz`|A package omitted from the repository or blacklisted.|
+| Dependency | `!foo OR bar` | If `foo` is installed, `bar` must be too |
+| Root requirement | `foo` | Target package is mandatory |
+| Conflict | `!bar_v1 OR !bar_v2` | Mutually exclusive versions |
 
-## 4. Package Formatting and Compression Standards
+The solver implements Unit Propagation with watched literals and Conflict-Driven Clause Learning (CDCL) for efficient backtracking.
 
-All software artifacts managed by `xpg` utilize the `alpm-package` format, encapsulated in `.pkg.tar.zst` archives.
+### Package format
 
-### Metadata Specification
+Packages use the ALPM `.pkg.tar.zst` format with Zstandard compression:
 
-Each archive contains critical metadata files at the top level:
+- `.PKGINFO` -- package name, version, dependencies
+- `.BUILDINFO` -- reproducible build environment
+- `.MTREE` -- file integrity hashes
+- `.INSTALL` -- optional pre/post install scripts
 
-- **.PKGINFO**: Contains core metadata: package names, versions, and dependency declarations.
-- **.BUILDINFO**: Facilitates reproducible builds by documenting the specific build environment.
-- **.MTREE**: A directory of file hashes and timestamps used for post-installation integrity verification.
-- **.INSTALL**: Optional scripts executed during specific transaction phases (e.g., `post_install`).
+### Security
 
-### Archive Handling and Streaming Constraints
+- **OpenPGP detached signatures** (`.sig`) for packages and databases
+- **Web of Trust** model for key validation
+- **Fakeroot** build environment for safe package creation
+- **Package linting** framework for quality assurance
 
-`xpg` utilizes the `tar_minimal` library for high-performance Unix-native streaming with Zstandard (Zstd) compression. This library implements a strict **Builder/Decoder architecture**. Due to its minimalist design, the following architectural constraints are enforced:
+## Repository hosting
 
-- **No Random Access**: The engine does not support listing or reading individual files out of sequence; it is strictly a stream-in/stream-out pipeline.
-- **Unix-Native Only**: The library is optimized for Unix permissions and metadata; Windows environments are not supported.
-- **Immutable Archives**: The format does not support in-place updates or appending; archives must be fully reconstructed if metadata changes.
+The default package repository is hosted on **GitHub Pages** at `xscriptor.github.io/x-repo`. This will migrate to the `xscriptordev` organization for consistency as the project grows. `xpm` supports any HTTP-based static file server, making future migration to a VPS transparent.
 
-## 5. Repository Database Architecture
+## Roadmap
 
-Repository metadata is defined by the `alpm-repo-db` format. This format organizes metadata into directories named according to the schema `package-version` (e.g., `example-package-1.0.0-1/desc`).
+See [ROADMAP.md](ROADMAP.md) for the full development roadmap.
 
-### Repository Database Variants
+| Version | Milestone |
+|---|---|
+| `v0.1.0` | Functional CLI with configuration |
+| `v0.2.0` | Package operations via libalpm bridge |
+| `v0.5.0` | Native engine (resolver + packages + repo db) |
+| `v0.8.0` | Security and transaction management |
+| `v1.0.0` | Full native Rust, no C dependencies |
 
-- **Default**: Includes `alpm-repo-desc` for each package. This is the minimum requirement for basic searching, dependency resolution, and download orchestration.
-- **Default with Files**: Adds `alpm-repo-files`, enabling advanced queries such as identifying which package owns a specific binary on the filesystem.
+## License
 
-### Agnostic Symlinks and Interoperability
-
-To facilitate seamless server-side compression transitions (e.g., moving from `.gz` to `.zst`), `xpg` relies on **agnostic symlinks**. For example, the symlink `repo.db` points to the specific compressed archive (e.g., `repo.db.tar.zst`). This allows the client to request a stable filename while the backend updates compression "on the fly" without breaking existing package manager installations.
-
-## 6. Security and Verification Framework
-
-`xpg` implements a rigorous security model to safeguard the software supply chain against artifact tampering and unauthorized distribution.
-
-- **Berblom Algorithm**: Utilized for advanced key management and establishing granular trust levels for package signers.
-- **Web of Trust (WoT)**: The underlying trust model for validating the authenticity of the keys used to sign software artifacts.
-- **Digital Signatures**: All repository databases and packages must be accompanied by **OpenPGP detached signatures** using the `.sig` suffix.
-- **Fakeroot Build Environment**: During package creation, binaries are compiled and staged within a `fakeroot` environment to prevent the build process from interfering with the host system's root filesystem.
-
-### Maintenance Quality Assurance
-
-Maintainers employ a Rust-based **linting framework** that performs static analysis on packages. This ensures that every artifact complies with distribution policies and meets technical quality standards before being signed and pushed to the repository.
-
-## 7. Conclusion and Future Technical Roadmap
-
-By synthesizing Rust’s memory safety with formalized ALPM specifications, `xpg` provides a transparent and robust foundation for the 'X' distribution. The shift from legacy C-FFI toward a native Rust stack ensures that the package manager remains performant and secure under modern threat models.
-
-**Future Development Goals:**
-
-- **Python Interoperability**: Finalizing modular bindings to allow automation tools and external scripts to interact safely with the `xpg` engine.
-- **Enhanced Internationalization (i18n)**: Implementing comprehensive support for localized messaging across all CLI subcommands.
-- **Verification Expansion**: Integrating emerging cryptographic standards to further harden the Web of Trust model.
+GPL-3.0-or-later. See [LICENSE](LICENSE).

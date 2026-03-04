@@ -16,7 +16,7 @@ and TOML configuration parser are implemented and tested.
 - [x] Add linter and formatter configuration (#3)
 - [ ] Set up CI pipeline (#4)
 - [x] Add license and crate metadata (#5)
-- [ ] Update README to reflect current architecture and repo strategy (#48)
+- [/] Update README to reflect current architecture and repo strategy (#48)
 
 ## Phase 1 · CLI and Configuration <!-- phase:phase-1:cli -->
 
