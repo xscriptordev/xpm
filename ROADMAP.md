@@ -1,11 +1,11 @@
-# Roadmap — xpg Package Manager
+# Roadmap — xpm Package Manager
 
 > Rust-based package manager for the 'X' distribution (Arch Linux-based).
 
 ## Current Status
 
-The project is in its **documentation phase** — a technical architecture document
-(`README.md`) defines the system vision, but no source code has been implemented yet.
+Phases 0–1 mostly complete — project scaffolding, CLI with 8 subcommands,
+and TOML configuration parser are implemented and tested.
 
 ---
 
@@ -16,6 +16,7 @@ The project is in its **documentation phase** — a technical architecture docum
 - [x] Add linter and formatter configuration (#3)
 - [ ] Set up CI pipeline (#4)
 - [x] Add license and crate metadata (#5)
+- [ ] Update README to reflect current architecture and repo strategy
 
 ## Phase 1 · CLI and Configuration <!-- phase:phase-1:cli -->
 
@@ -25,6 +26,9 @@ The project is in its **documentation phase** — a technical architecture docum
 - [x] Integrate lib.rs with CLI (#9)
 - [ ] Define activation commands and parameter matrix — document all CLI invocations, flags and aliases (#46)
 - [ ] Define fetch targets — repositories, mirrors and sync endpoints (#47)
+- [ ] Implement repo subcommand — xpm repo add, remove, list
+- [ ] Implement temporary repo file — /etc/xpm.d/ directory for user-added repos
+- [ ] Set predefined default repo in config — GitHub Pages x-repo as built-in
 
 ## Phase 2 · FFI Bindings with libalpm — Transitional Bridge <!-- phase:phase-2:ffi-bridge -->
 
@@ -53,6 +57,8 @@ The project is in its **documentation phase** — a technical architecture docum
 - [ ] Implement alpm-repo-files support (#23)
 - [ ] Implement agnostic symlink handling (#24)
 - [ ] Implement remote database sync (#25)
+- [ ] Implement GitHub Pages repo backend — fetch packages from static hosting
+- [ ] Implement repo URL variable substitution — $repo, $arch placeholders
 
 ## Phase 6 · Security and Verification <!-- phase:phase-6:security -->
 
@@ -92,7 +98,7 @@ The project is in its **documentation phase** — a technical architecture docum
 
 ```mermaid
 gantt
-    title xpg Roadmap
+    title xpm Roadmap
     dateFormat  YYYY-MM
     axisFormat  %b %Y
 
