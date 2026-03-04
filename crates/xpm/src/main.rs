@@ -11,6 +11,7 @@ use tracing::Level;
 use tracing_subscriber::EnvFilter;
 
 use cli::{Cli, Command};
+use xpm_core::repo::RepoManager;
 use xpm_core::XpmConfig;
 
 fn main() -> Result<()> {
@@ -69,6 +70,7 @@ fn main() -> Result<()> {
         Command::Search(args) => cmd_search(&config, args),
         Command::Info(args) => cmd_info(&config, args),
         Command::Files(args) => cmd_files(&config, args),
+        Command::Repo(args) => cmd_repo(&config, args),
     }
 }
 
@@ -157,5 +159,58 @@ fn cmd_info(_config: &XpmConfig, args: &cli::InfoArgs) -> Result<()> {
 fn cmd_files(_config: &XpmConfig, args: &cli::FilesArgs) -> Result<()> {
     println!(":: Files owned by '{}':", args.package);
     println!(":: File listing complete (stub).");
+    Ok(())
+}
+
+fn cmd_repo(config: &XpmConfig, args: &cli::RepoArgs) -> Result<()> {
+    let manager = RepoManager::default_dir();
+
+    match &args.action {
+        cli::RepoAction::Add(add) => {
+            manager
+                .add(&add.name, &add.url)
+                .with_context(|| format!("failed to add repository '{}'", add.name))?;
+            println!(":: Repository '{}' added successfully.", add.name);
+            println!("   url: {}", add.url);
+            println!("   Run 'xpm sync' to refresh databases.");
+        }
+        cli::RepoAction::Remove(rm) => {
+            manager
+                .remove(&rm.name)
+                .with_context(|| format!("failed to remove repository '{}'", rm.name))?;
+            println!(":: Repository '{}' removed.", rm.name);
+        }
+        cli::RepoAction::List => {
+            println!(":: Active repositories:");
+            println!();
+
+            // Predefined repos from config
+            println!("   [predefined]");
+            for repo in &config.repositories {
+                let sig = repo.sig_level.unwrap_or(config.options.sig_level);
+                println!(
+                    "   {} ({} server(s), sig: {})",
+                    repo.name,
+                    repo.server.len(),
+                    sig
+                );
+            }
+
+            // User-added repos
+            let user_repos = manager.list().context("failed to list user repositories")?;
+            if !user_repos.is_empty() {
+                println!();
+                println!("   [user-added]");
+                for repo in &user_repos {
+                    println!("   {} — {}", repo.name, repo.server.join(", "));
+                }
+            }
+
+            println!();
+            let total = config.repositories.len() + user_repos.len();
+            println!("   Total: {} repository(ies)", total);
+        }
+    }
+
     Ok(())
 }

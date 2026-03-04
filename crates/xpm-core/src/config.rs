@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::error::ConfigError;
 
@@ -16,7 +16,7 @@ const DEFAULT_CONFIG_PATH: &str = "/etc/xpm.conf";
 // ── Configuration structs ───────────────────────────────────────────────────
 
 /// Signature verification level for packages and databases.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum SigLevel {
     /// Signature verification is mandatory.

@@ -5,6 +5,7 @@
 
 pub mod config;
 pub mod error;
+pub mod repo;
 
 // Re-export key types for convenience.
 pub use config::XpmConfig;
