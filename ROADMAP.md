@@ -23,8 +23,8 @@ The project is in its **documentation phase** — a technical architecture docum
 - [x] Implement configuration parser (#7)
 - [x] Implement main.rs orchestration (#8)
 - [x] Integrate lib.rs with CLI (#9)
-- [ ] Define activation commands and parameter matrix — document all CLI invocations, flags and aliases
-- [ ] Define fetch targets — repositories, mirrors and sync endpoints
+- [ ] Define activation commands and parameter matrix — document all CLI invocations, flags and aliases (#46)
+- [ ] Define fetch targets — repositories, mirrors and sync endpoints (#47)
 
 ## Phase 2 · FFI Bindings with libalpm — Transitional Bridge <!-- phase:phase-2:ffi-bridge -->
 
