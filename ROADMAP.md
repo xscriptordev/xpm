@@ -84,7 +84,7 @@ Next step: Phase 3 (native dependency resolution).
   - [ ] Download and update .db files from configured mirrors
 - [ ] Implement GitHub Pages repo backend — fetch packages from static hosting (#52)
 - [ ] Implement repo URL variable substitution — $repo, $arch placeholders (#53)
-- [ ] Write repository database test suite — parser tests with real Arch .db files
+- [ ] Write repository database test suite — parser tests with real Arch .db files (#56)
 
 ## Phase 6 · Security and Verification <!-- phase:phase-6:security -->
 
@@ -95,7 +95,7 @@ Next step: Phase 3 (native dependency resolution).
 - [ ] Implement Web of Trust — WoT — model (#28)
 - [ ] Implement fakeroot build environment (#29)
 - [ ] Implement package linting framework (#30)
-- [ ] Write security test suite — signature verification, key management and linting tests
+- [ ] Write security test suite — signature verification, key management and linting tests (#57)
 
 ## Phase 7 · Transactions and System Management <!-- phase:phase-7:transactions -->
 
@@ -111,7 +111,7 @@ Next step: Phase 3 (native dependency resolution).
   - [ ] Prevent concurrent xpm operations
 - [ ] Implement transaction logging (#35)
   - [ ] Append operations to /var/log/xpm.log
-- [ ] Write transaction test suite — install, remove, upgrade, conflict and rollback tests
+- [ ] Write transaction test suite — install, remove, upgrade, conflict and rollback tests (#58)
 
 ## Phase 8 · Full Migration to Native Rust <!-- phase:phase-8:migration -->
 
