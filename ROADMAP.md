@@ -16,7 +16,7 @@ and TOML configuration parser are implemented and tested.
 - [x] Add linter and formatter configuration (#3)
 - [ ] Set up CI pipeline (#4)
 - [x] Add license and crate metadata (#5)
-- [7] Update README to reflect current architecture and repo strategy (#48)
+- [/] Update README to reflect current architecture and repo strategy (#48)
 
 ## Phase 1 · CLI and Configuration <!-- phase:phase-1:cli -->
 
@@ -24,12 +24,12 @@ and TOML configuration parser are implemented and tested.
 - [x] Implement configuration parser (#7)
 - [x] Implement main.rs orchestration (#8)
 - [x] Integrate lib.rs with CLI (#9)
-- [ ] Define activation commands and parameter matrix — document all CLI invocations, flags and aliases (#46)
-- [ ] Define fetch targets — repositories, mirrors and sync endpoints (#47)
+- [/] Define activation commands and parameter matrix — document all CLI invocations, flags and aliases (#46)
+- [/] Define fetch targets — repositories, mirrors and sync endpoints (#47)
 - [x] Implement repo subcommand — xpm repo add, remove, list (#49)
 - [x] Implement temporary repo file — /etc/xpm.d/ directory for user-added repos (#50)
 - [x] Set predefined default repo in config — GitHub Pages x-repo as built-in (#51)
-- [ ] Implement custom help parameter — xpm help with detailed usage info (#54)
+- [/] Implement custom help parameter — xpm help with detailed usage info (#54)
 
 ## Phase 2 · FFI Bindings with libalpm — Transitional Bridge <!-- phase:phase-2:ffi-bridge -->
 
