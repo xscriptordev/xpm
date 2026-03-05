@@ -6,6 +6,7 @@
 
 Phases 0–1 mostly complete — project scaffolding, CLI with 8 subcommands,
 and TOML configuration parser are implemented and tested.
+Next step: Phase 3 (native dependency resolution).
 
 ---
 
@@ -33,56 +34,96 @@ and TOML configuration parser are implemented and tested.
 
 ## Phase 2 · FFI Bindings with libalpm — Transitional Bridge <!-- phase:phase-2:ffi-bridge -->
 
-- [ ] Integrate alpm.rs crate (#10)
-- [ ] Create Rust wrapper over ALPM operations (#11)
-- [ ] Integration tests with local repository (#12)
+> **Skipped** — going directly to native Rust implementation to avoid C dependencies.
+
+- [x] Integrate alpm.rs crate (#10)
+- [x] Create Rust wrapper over ALPM operations (#11)
+- [x] Integration tests with local repository (#12)
 
 ## Phase 3 · Native Dependency Resolution Engine <!-- phase:phase-3:resolver -->
 
 - [ ] Integrate resolvo SAT solver (#13)
+  - [ ] Add resolvo crate and implement DependencyProvider trait
+  - [ ] Implement version parser and comparator — full vercmp compatible with ALPM versioning
+  - [ ] Implement dependency string parser — parse operators >=, <=, =, >, < from dep strings
+  - [ ] Implement core resolver types — Package, Dependency, Conflict, VersionReq structs
 - [ ] Implement dependency-to-CNF clause translator (#14)
 - [ ] Implement Unit Propagation with watched literals (#15)
 - [ ] Implement CDCL — Conflict-Driven Clause Learning (#16)
 - [ ] Write dependency resolution test suite (#17)
+  - [ ] Unit tests for version comparison and dependency parsing
+  - [ ] Integration tests for full solve scenarios
 
 ## Phase 4 · Package Format and Archives <!-- phase:phase-4:packages -->
 
 - [ ] Implement .pkg.tar.zst parser and builder (#18)
+  - [ ] Implement .pkg.tar.zst archive reader — zstd decompression + tar extraction
+  - [ ] Implement .pkg.tar.zst builder — create packages from directory tree
 - [ ] Implement package metadata parser (#19)
+  - [ ] Implement .PKGINFO parser — extract name, version, dependencies, provides, conflicts
+  - [ ] Implement .BUILDINFO parser — reproducible build environment metadata
+  - [ ] Implement .MTREE parser — file integrity hashes and permissions
+  - [ ] Implement PackageMeta types — unified structs for all package metadata fields
 - [ ] Implement post-installation integrity validation (#20)
+  - [ ] Verify extracted files against .MTREE checksums
 - [ ] Write package format tests (#21)
+  - [ ] Round-trip tests — build and re-parse packages
+  - [ ] Parse real Arch Linux .pkg.tar.zst packages
 
 ## Phase 5 · Repository Database <!-- phase:phase-5:repo-db -->
 
 - [ ] Implement alpm-repo-db parser (#22)
+  - [ ] Read desc and depends entries from repo .db tar archives
+  - [ ] Implement repo database types — RepoEntry, SyncDb, LocalDb structs
 - [ ] Implement alpm-repo-files support (#23)
+  - [ ] Parse file listings from .files archives
 - [ ] Implement agnostic symlink handling (#24)
+  - [ ] Implement local package database — track installed packages under /var/lib/xpm/local/
 - [ ] Implement remote database sync (#25)
+  - [ ] Implement HTTP download client — reqwest wrapper with progress, retries and parallel downloads
+  - [ ] Download and update .db files from configured mirrors
 - [ ] Implement GitHub Pages repo backend — fetch packages from static hosting (#52)
 - [ ] Implement repo URL variable substitution — $repo, $arch placeholders (#53)
+- [ ] Write repository database test suite — parser tests with real Arch .db files
 
 ## Phase 6 · Security and Verification <!-- phase:phase-6:security -->
 
 - [ ] Implement OpenPGP signature verification (#26)
+  - [ ] Verify detached .sig files via sequoia-openpgp (pure Rust)
 - [ ] Implement Berblom algorithm for key management (#27)
+  - [ ] Import, list, trust and revoke keys in local keyring
 - [ ] Implement Web of Trust — WoT — model (#28)
 - [ ] Implement fakeroot build environment (#29)
 - [ ] Implement package linting framework (#30)
+- [ ] Write security test suite — signature verification, key management and linting tests
 
 ## Phase 7 · Transactions and System Management <!-- phase:phase-7:transactions -->
 
 - [ ] Implement transaction engine (#31)
+  - [ ] Plan, prepare and commit install/remove/upgrade operations
 - [ ] Implement pre/post transaction hooks (#32)
+  - [ ] Implement file extraction — install package files to filesystem with correct ownership
+  - [ ] Implement file removal — clean uninstall respecting shared files
+  - [ ] Execute scriptlets and alpm-hooks
 - [ ] Implement configuration file management (#33)
+  - [ ] Handle .pacnew and .pacsave generation
 - [ ] Implement database lock mechanism (#34)
+  - [ ] Prevent concurrent xpm operations
 - [ ] Implement transaction logging (#35)
+  - [ ] Append operations to /var/log/xpm.log
+- [ ] Write transaction test suite — install, remove, upgrade, conflict and rollback tests
 
 ## Phase 8 · Full Migration to Native Rust <!-- phase:phase-8:migration -->
 
-- [ ] Replace alpm.rs FFI bindings with native Rust implementation (#36)
-- [ ] Remove libalpm C dependency (#37)
+> **Skipped** — Phase 2 was bypassed, so there is nothing to migrate.
+
+- [x] Replace alpm.rs FFI bindings with native Rust implementation (#36)
+- [x] Remove libalpm C dependency (#37)
 - [ ] Run comparative benchmarks vs pacman (#38)
+  - [ ] Benchmark sync, install and resolve performance
+  - [ ] Stress test with full Arch repository — ensure correctness at scale
 - [ ] Complete test suite — unit, integration, and fuzzing (#39)
+  - [ ] Audit error handling and edge cases — partial downloads, corrupt packages, disk full
 
 ## Phase 9 · Future Goals — Post v1.0 <!-- phase:phase-9:future -->
 
@@ -105,25 +146,25 @@ gantt
     axisFormat  %b %Y
 
     section Foundation
-    Scaffolding           :f0, 2026-03, 2w
-    CLI and configuration :f1, after f0, 3w
+    Scaffolding           :done, f0, 2026-03, 2w
+    CLI and configuration :done, f1, after f0, 3w
 
     section Transitional Bridge
-    libalpm bindings      :f2, after f1, 4w
+    libalpm bindings (skipped) :done, f2, after f1, 0d
 
     section Native Engine
-    Dependency resolution :f3, after f2, 6w
+    Dependency resolution :f3, after f2, 5w
     Package format        :f4, after f3, 4w
-    Repository database   :f5, after f4, 4w
+    Repository database   :f5, after f4, 5w
 
     section Security
-    Verification and signing :f6, after f5, 5w
+    Verification and signing :f6, after f5, 4w
 
     section System
     Transactions          :f7, after f6, 5w
-
-    section Migration
-    Full native Rust      :f8, after f7, 6w
+`
+    section Hardening
+    Benchmarks and testing :f8, after f7, 4w
 
     section Post v1.0
     Future goals          :f9, after f8, 8w
@@ -133,7 +174,7 @@ gantt
 
 > **Versioning convention:**
 > - `v0.1.0` — Phases 0-1 complete (functional CLI with configuration)
-> - `v0.2.0` — Phase 2 complete (functionality via libalpm)
+> - `v0.2.0` — Phase 2 skipped (no libalpm dependency)
 > - `v0.5.0` — Phases 3-5 complete (native engine operational)
 > - `v0.8.0` — Phases 6-7 complete (security + transactions)
-> - `v1.0.0` — Phase 8 complete (full migration, no C dependencies)
+> - `v1.0.0` — Phase 8 complete (benchmarked, tested, production-ready)

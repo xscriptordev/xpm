@@ -1,4 +1,4 @@
-# xpm -- Package Manager for X Distribution
+<h1 alignt="center">X Package Manager</h1>
 
 > Modern, high-performance package manager written in pure Rust for the X distribution (Arch Linux-based).
 
@@ -8,7 +8,7 @@
 
 ### Key features
 
-- **Pure Rust** -- no C dependencies in the final build
+- **Pure Rust** -- zero C dependencies at any stage
 - **SAT-based dependency resolver** -- powered by `resolvo` with CDCL and watched-literal propagation
 - **ALPM compatible** -- reads `.pkg.tar.zst` packages, `alpm-repo-db` databases, and `.PKGINFO` / `.BUILDINFO` / `.MTREE` metadata
 - **Flexible repository management** -- predefined and temporary repos with `xpm repo add/remove/list`
@@ -127,7 +127,8 @@ xpm/
 │       └── src/
 │           ├── lib.rs           # Module root
 │           ├── config.rs        # TOML configuration parser
-│           └── error.rs         # Error types
+│           ├── error.rs         # Error types
+│           └── repo.rs          # Repository manager
 ├── etc/
 │   └── xpm.conf.example        # Example configuration
 └── ROADMAP.md                   # Development roadmap
@@ -174,10 +175,9 @@ See [ROADMAP.md](ROADMAP.md) for the full development roadmap.
 | Version | Milestone |
 |---|---|
 | `v0.1.0` | Functional CLI with configuration |
-| `v0.2.0` | Package operations via libalpm bridge |
 | `v0.5.0` | Native engine (resolver + packages + repo db) |
 | `v0.8.0` | Security and transaction management |
-| `v1.0.0` | Full native Rust, no C dependencies |
+| `v1.0.0` | Benchmarked, tested, production-ready |
 
 ## License
 
