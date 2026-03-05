@@ -6,7 +6,10 @@
 
 Phases 0–1 mostly complete — project scaffolding, CLI with 8 subcommands,
 and TOML configuration parser are implemented and tested.
-Next step: Phase 3 (native dependency resolution).
+Phase 3 complete — native SAT-based dependency resolver using resolvo,
+with ALPM-compatible version comparison, dependency parsing, conflict
+handling, and a full integration test suite (56 tests).
+Next step: Phase 4 (package format and archives).
 
 ---
 
@@ -42,17 +45,17 @@ Next step: Phase 3 (native dependency resolution).
 
 ## Phase 3 · Native Dependency Resolution Engine <!-- phase:phase-3:resolver -->
 
-- [ ] Integrate resolvo SAT solver (#13)
-  - [ ] Add resolvo crate and implement DependencyProvider trait
-  - [ ] Implement version parser and comparator — full vercmp compatible with ALPM versioning
-  - [ ] Implement dependency string parser — parse operators >=, <=, =, >, < from dep strings
-  - [ ] Implement core resolver types — Package, Dependency, Conflict, VersionReq structs
-- [ ] Implement dependency-to-CNF clause translator (#14)
-- [ ] Implement Unit Propagation with watched literals (#15)
-- [ ] Implement CDCL — Conflict-Driven Clause Learning (#16)
-- [ ] Write dependency resolution test suite (#17)
-  - [ ] Unit tests for version comparison and dependency parsing
-  - [ ] Integration tests for full solve scenarios
+- [x] Integrate resolvo SAT solver (#13)
+  - [x] Add resolvo crate and implement DependencyProvider trait
+  - [x] Implement version parser and comparator — full vercmp compatible with ALPM versioning
+  - [x] Implement dependency string parser — parse operators >=, <=, =, >, < from dep strings
+  - [x] Implement core resolver types — Package, Dependency, Conflict, VersionReq structs
+- [x] Implement dependency-to-CNF clause translator (#14)
+- [x] Implement Unit Propagation with watched literals (#15)
+- [x] Implement CDCL — Conflict-Driven Clause Learning (#16)
+- [x] Write dependency resolution test suite (#17)
+  - [x] Unit tests for version comparison and dependency parsing
+  - [x] Integration tests for full solve scenarios
 
 ## Phase 4 · Package Format and Archives <!-- phase:phase-4:packages -->
 
@@ -153,7 +156,7 @@ gantt
     libalpm bindings (skipped) :done, f2, after f1, 0d
 
     section Native Engine
-    Dependency resolution :f3, after f2, 5w
+    Dependency resolution :done, f3, after f2, 5w
     Package format        :f4, after f3, 4w
     Repository database   :f5, after f4, 5w
 
