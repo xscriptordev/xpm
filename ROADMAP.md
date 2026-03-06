@@ -62,11 +62,11 @@ Next step: Phase 4 (package format and archives).
 - [x] Implement .pkg.tar.zst parser and builder (#18)
   - [x] Implement .pkg.tar.zst archive reader — zstd decompression + tar extraction
   - [x] Implement .pkg.tar.zst builder — create packages from directory tree
-- [ ] Define .xp package format — X Package native format
+- [ ] Define .xp package format — X Package native format (#59)
   - [ ] Document .xp specification — tar.zst archive with .PKGINFO, .BUILDINFO, .MTREE
   - [ ] Implement .xp archive reader — zstd decompression + tar extraction
   - [ ] Support dual extensions — .xp (X Distribution) and .pkg.tar.zst (Arch compatibility)
-- [/] Create xpkg tool — separate package building from xpm into dedicated repository
+- [/] Create xpkg tool — separate package building from xpm into dedicated repository (#60)
 - [ ] Implement package metadata parser (#19)
   - [ ] Implement .PKGINFO parser — extract name, version, dependencies, provides, conflicts
   - [ ] Implement .BUILDINFO parser — reproducible build environment metadata
